@@ -121,7 +121,6 @@ class IDFApp:
             
         except Exception as e:
             messagebox.showerror("[Erro!]", f"Erro ao Calcular o TF-IDF: {e}")
-#endregion
 
 if __name__ == "__main__":
     root = tk.Tk()
