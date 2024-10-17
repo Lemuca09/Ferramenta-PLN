@@ -5,7 +5,13 @@ import numpy as np
 import statistics as st
 import math
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
+# Inicializa o NLTK
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 class IDFApp:
     def __init__(self, root):
@@ -14,34 +20,32 @@ class IDFApp:
         self.root.geometry("600x700")
         
         self.label = tk.Label(root, text="Escoha o Arquivo CSV:")
-        self.label.pack(pady=10)
+        self.label.grid(row=0, column=0, columnspan=2, pady=10, padx=50)
         
         self.btn_upload = tk.Button(root, text="Escolher", command=self.upload_file_text)
-        self.btn_upload.pack(pady=10)
-        
-        self.lbl_busca = tk.Label(root, text="Busque por colunas para calcular o TF-IDF (Lyrics):")
-        self.lbl_busca.pack(pady=10)
-        
-        self.txt_search = tk.Entry(root)
-        self.txt_search.pack(pady=5)
-        self.txt_search.bind("<KeyRelease>", self.filtrar_colunas_text) 
+        self.btn_upload.grid(row=1, column=0, columnspan=2, pady=10, padx=50) 
         
         self.lbl_colunas = tk.Label(root, text="Selecione a Coluna:") 
-        self.lbl_colunas.pack(pady=10)
+        self.lbl_colunas.grid(row=2, column=0, pady=10, padx=50)
         self.lbx_colunas = tk.Listbox(root, selectmode=tk.SINGLE, width=50) 
-        self.lbx_colunas.pack(pady=10) 
+        self.lbx_colunas.grid(row=3, column=0, columnspan=2, pady=10, padx=50) 
         
+        self.lbl_amostra = tk.Label(root, text="Insira a Amostra:")
+        self.lbl_amostra.grid(row=4, column=0, columnspan=2, pady=10, padx=50)
+        self.txt_amostra = tk.Text(root, height=5, width=60)
+        self.txt_amostra.grid(row=5, column=0, columnspan=2, pady=10, padx=50)
+
         self.btn_calcIDF = tk.Button(root, text="Calcule o TF-IDF", command=self.calcular_tfidf_text_linha)
-        self.btn_calcIDF.pack(pady=10)
+        self.btn_calcIDF.grid(row=6, column=0, columnspan=2, pady=10, padx=50)
         
         self.lbl_resultado = tk.Label(root, text="Resultado:")
-        self.lbl_resultado.pack(pady=10) 
+        self.lbl_resultado.grid(row=7, column=0, columnspan=2, pady=10, padx=50) 
         self.txt_resultado = tk.Text(root, height=10, width=60) 
-        self.txt_resultado.pack(pady=10) 
+        self.txt_resultado.grid(row=8, column=0, columnspan=2, pady=10, padx=50) 
         
         self.txt_elementos_analisados = tk.Label(root, text=f"") 
-        self.txt_elementos_analisados.pack(pady=10)
-        
+        self.txt_elementos_analisados.grid(row=9, column=0, columnspan=2, pady=10, padx=50)
+
         self.todas_colunas = []  # Armazena todas as colunas do arquivo CSV
                 
     def upload_file_text(self):
@@ -57,19 +61,13 @@ class IDFApp:
                     self.gera_colunas_listbox()
                     
                 except Exception as e:
-                    messagebox.showerror("[Erro!]", f"[Erro!] : {e}")    
+                    messagebox.showerror("[Erro!]", f"[Erro!] : {e}") 
     
     def gera_colunas_listbox(self):
         self.todas_colunas = list(self.data.columns)  # columns Propriedade DataFrame Pandas
-        self.filtrar_colunas_text() 
-                   
-    def filtrar_colunas_text(self, event=None):
-        termo_busca = self.txt_search.get().lower()  
-        self.lbx_colunas.delete(0, tk.END)  # Garante que a lista esteja vazia
-
-        for col in self.data.select_dtypes(include=['object']).columns:   # Percorre as colunas do dataframe
-            if termo_busca in col.lower():   # Verifica se a palavra está na coluna
-                self.lbx_colunas.insert(tk.END, col)    
+        self.lbx_colunas.delete(0, tk.END)
+        for col in self.todas_colunas:
+            self.lbx_colunas.insert(tk.END, col)
                          
 #region tfidf linhas
     def calcular_tfidf_text_linha(self):
@@ -80,30 +78,44 @@ class IDFApp:
         try:
             N = len(self.data)
             
-            txt_data = self.data[colunas_selecionadas].fillna('').astype(str).apply(lambda x: ' '.join(x), axis=1).tolist() # Converte o DataFrame para uma lista de strings do cónteudo das rows e dropa as linhas vazias
+            amostra = self.txt_amostra.get("1.0", tk.END).strip()
+            if not amostra:
+                messagebox.showerror("[Erro!]", "Insira a Amostra")
+                return
+
+            # Calcula o TF-IDF para a amostra e para os documentos
             vectorizer = TfidfVectorizer(use_idf=True, stop_words="english")
-            tfidf_matriz = vectorizer.fit_transform(txt_data)  # Cria uma matriz com valores de TF-IDF (fit transform) após receber a lista de textos
-            
+            tfidf_matriz = vectorizer.fit_transform(self.data[colunas_selecionadas].fillna('').astype(str).apply(lambda x: ' '.join(x), axis=1).tolist() + [amostra])
+
             stop_words = vectorizer.get_stop_words()
             termos = vectorizer.get_feature_names_out()
-            idf_pontos = dict(zip(termos, vectorizer.idf_)) #Cria um dicionário, onde as chaves são os termos(str, por causa do get_feature...) e os valores são os idf(ndarray), em formato de tupla(termo, idf)
-            
-            self.txt_resultado.delete(1.0, tk.END) # Limpa o txt de resultado
-            
+            idf_pontos = dict(zip(termos, vectorizer.idf_)) 
+
+            self.txt_resultado.delete(1.0, tk.END) 
             self.txt_resultado.insert(tk.END, f"TF-IDF (Matriz por Coluna): {colunas_selecionadas}\n\n")
             tfidf_array = tfidf_matriz.toarray()
-            
-            if stop_words in termos:
-                termos.remove(stop_words)
 
-            for i, linha in enumerate(tfidf_array):
-                self.txt_resultado.insert(tk.END, f"Documento {i+1}: \n")
-                for term, valor_tfidf in zip(termos, linha):
-                    if valor_tfidf > 0:  # Exibe apenas termos relevantes (com TF-IDF > 0)
-                        self.txt_resultado.insert(tk.END, f" {term}: {valor_tfidf:.4f}\n")
-                self.txt_resultado.insert(tk.END, "\n")
+            # Remove as stopwords da lista de termos
+            termos = [term for term in termos if term not in stop_words] 
 
-            self.txt_elementos_analisados.config(f"De {N} elementos analisados")
+            # Calcula a similaridade do cosseno entre a amostra e os documentos
+            similaridades = cosine_similarity(tfidf_array[-1].reshape(1, -1), tfidf_array[:-1])
+
+            # Ordena os documentos pela similaridade em ordem decrescente
+            ordens = np.argsort(similaridades[0])[::-1]
+
+            # Exibe os documentos mais próximos à amostra
+            self.txt_resultado.insert(tk.END, f"Documentos mais próximos à amostra:\n\n")
+            for i in ordens:
+                porcentagem_similaridade = similaridades[0][i] * 100
+                # Obtém o nome da música da coluna "Title"
+                nome_musica = self.data['Title'].iloc[i] 
+                # Obtém o nome do artista da coluna "Artist"
+                nome_artista = self.data['Artist'].iloc[i]
+                self.txt_resultado.insert(tk.END, f"{nome_musica} - {nome_artista}: {porcentagem_similaridade:.2f}%\n")
+                self.txt_resultado.insert(tk.END, f" {self.data[colunas_selecionadas].iloc[i].to_string()}\n\n")
+
+            self.txt_elementos_analisados.config(text=f"De {N} elementos analisados")
 
             messagebox.showinfo("Sucesso", "TF-IDF Calculado com Suceso!")
             
