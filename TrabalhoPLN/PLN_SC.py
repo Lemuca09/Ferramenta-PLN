@@ -13,7 +13,7 @@ nltk.download('wordnet')
 class IDFApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Recomendaões Spotify (Similiaridade dos Cossenos)")
+        self.root.title("Recomendações Spotify (Similiaridade dos Cossenos)")
         self.root.geometry("500x900")
         self.root.configure(bg="#f0f0f0")
         
