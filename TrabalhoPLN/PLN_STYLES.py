@@ -21,12 +21,12 @@ class IDFApp:
         self.root.configure(bg="#f0f0f0")
         
         estilo_titulo = ("Arial", 12, "bold")
-        estilo_normal = ("Arial", 10)
+        estilo_normal = ("Arial", 12)
         
         self.label = customtkinter.CTkLabel(root, text="Escoha o Arquivo CSV:", font=estilo_titulo)
         self.label.grid(row=0, column=0, columnspan=1, pady=10, padx=20, sticky='w')
         
-        self.btn_upload = customtkinter.CTkButton(root, text="       Escolher        ", font=estilo_normal, command=self.upload_file_text)
+        self.btn_upload = customtkinter.CTkButton(root, text="                Escolher                ", font=estilo_normal, command=self.upload_file_text)
         self.btn_upload.grid(row=1, column=0, columnspan=2, pady=10, padx=150) 
         
         self.lbl_colunas = customtkinter.CTkLabel(root, text="Selecione a Coluna:", font=estilo_titulo) 
@@ -44,11 +44,11 @@ class IDFApp:
         
         self.lbl_resultado = customtkinter.CTkLabel(root, text="Resultado:", font=estilo_titulo)
         self.lbl_resultado.grid(row=7, column=0, columnspan=2, padx=20, sticky='w') 
-        self.txt_resultado = tk.Text(root, height=8, width=60, font=estilo_normal, bd=2, relief='solid') 
+        self.txt_resultado = tk.Text(root, height=8, width=60, font=estilo_normal, bd=2, relief='solid', state="disabled") 
         self.txt_resultado.grid(row=8, column=0, columnspan=2, pady=10, padx=20) 
         
-        self.txt_elementos_analisados = customtkinter.CTkLabel(root, text=f"", font=estilo_titulo) 
-        self.txt_elementos_analisados.grid(row=9, column=0, columnspan=2, pady=10, padx=20)
+        self.txt_elementos_analisados = customtkinter.CTkLabel(root, text=f"", font=estilo_titulo, text_color="green") 
+        self.txt_elementos_analisados.grid(row=8, column=2, columnspan=2, pady=10, padx=20)
 
         self.todas_colunas = []  # Armazena todas as colunas do arquivo CSV
                 
@@ -74,7 +74,6 @@ class IDFApp:
             self.lbx_colunas.insert(tk.END, col)
                          
 #region tfidf linhas
-   #region tfidf linhas
     def calcular_similiaridade_cosseno_text(self):
         colunas_selecionadas = [self.lbx_colunas.get(i) for i in self.lbx_colunas.curselection()]
         if not colunas_selecionadas:
@@ -98,7 +97,11 @@ class IDFApp:
             stop_words = vectorizer.get_stop_words()
             termos = vectorizer.get_feature_names_out()
             
-            self.txt_resultado.insert(tk.END, f"Top 5 Músicas Mais Semelhantes à amostra(%): ({colunas_selecionadas})\n\n")
+            nm_coluna = colunas_selecionadas.copy()
+            for i in nm_coluna:
+                nome = str(i).replace("[]'", "")
+                       
+            self.txt_resultado.insert(tk.END, f"Top 5 Músicas Mais Semelhantes à amostra(%): ({nome})\n\n")
             tfidf_array = tfidf_matriz.toarray()
 
             # Remove as stopwords da lista de termos
@@ -113,16 +116,16 @@ class IDFApp:
                 porcentagem_similaridade = similaridades[0][i] * 100
                 
                 if porcentagem_similaridade >  0:
-                    info =  self.data[colunas_selecionadas].iloc[i].to_string()
+                    info =  self.data[colunas_selecionadas].iloc[i].to_string().replace(r"\n", " ")
                     nome_musica = self.data['Title'].iloc[i]
                     nome_artista = self.data['Artist'].iloc[i]
                     
                     self.txt_resultado.configure(state='normal')
                     self.txt_resultado.insert(tk.END, f"{i+1}) {nome_musica} - {nome_artista}:\n")
-                    self.txt_resultado.insert(tk.END, f" {info.replace(r"\n", " ")}\n")
+                    self.txt_resultado.insert(tk.END, f" {info}\n")
                     self.txt_resultado.insert(tk.END, f" Similiaridade: {porcentagem_similaridade:.2f}% \n\n")
 
-            self.txt_elementos_analisados.configure(text=f"De {N} elementos analisados")
+            self.txt_elementos_analisados.configure(text=f"De {N} \nelementos analisados")
             
             self.txt_resultado.configure(state='disabled')
 
