@@ -16,7 +16,7 @@ class IDFApp:
         self.root = root
         customtkinter.set_appearance_mode("dark")
         customtkinter.set_default_color_theme("green")
-        self.root.title("Recomendaões Spotify (Similiaridade dos Cossenos)")
+        self.root.title("Recomendações Spotify (Similiaridade dos Cossenos)")
         self.root.geometry("500x900")
         self.root.configure(bg="#f0f0f0")
         
