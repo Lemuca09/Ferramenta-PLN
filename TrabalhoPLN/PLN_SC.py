@@ -78,11 +78,14 @@ class IDFApp:
             return
         try:
             N = len(self.data)
-            
+
             amostra = self.txt_amostra.get("1.0", tk.END).strip().lower()
             if not amostra:
                 messagebox.showerror("[Erro!]", "Insira a Amostra")
                 return
+
+            self.txt_resultado.config(state='normal')
+            self.txt_resultado.delete(1.0, tk.END) 
 
             # Calcula o TF-IDF para a amostra e para os documentos
             vectorizer = TfidfVectorizer(use_idf=True, stop_words="english")
@@ -90,8 +93,7 @@ class IDFApp:
 
             stop_words = vectorizer.get_stop_words()
             termos = vectorizer.get_feature_names_out()
-
-            self.txt_resultado.delete(1.0, tk.END) 
+            
             self.txt_resultado.insert(tk.END, f"Top 5 Músicas Mais Semelhantes à amostra(%): ({colunas_selecionadas})\n\n")
             tfidf_array = tfidf_matriz.toarray()
 
@@ -112,12 +114,13 @@ class IDFApp:
                     nome_artista = self.data['Artist'].iloc[i]
                     
                     self.txt_resultado.config(state='normal')
-                    self.txt_resultado.insert(tk.END, f"{nome_musica} - {nome_artista}:\n")
+                    self.txt_resultado.insert(tk.END, f"{i+1}) {nome_musica} - {nome_artista}:\n")
                     self.txt_resultado.insert(tk.END, f" {info.replace(r"\n", " ")}\n")
-                    self.txt_resultado.insert(tk.END, f"Similiaridade: {porcentagem_similaridade:.2f}% \n\n")
-                    self.txt_resultado.config(state='disabled')
+                    self.txt_resultado.insert(tk.END, f" Similiaridade: {porcentagem_similaridade:.2f}% \n\n")
 
             self.txt_elementos_analisados.config(text=f"De {N} elementos analisados")
+            
+            self.txt_resultado.config(state='disabled')
 
             messagebox.showinfo("Sucesso", "Similiaridade dos Cossenos Calculada com Suceso!")
             
