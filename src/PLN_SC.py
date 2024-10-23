@@ -22,7 +22,7 @@ class IDFApp:
         self.root.geometry("700x900")
         #customtkinter.deactivate_automatic_dpi_awareness()
         self.root.configure(bg="#f0f0f0")
-        #self.root.iconbitmap(r"../img/favicon.ico") # Converte .png etc para .ico / salvar como favicon.ico na pasta img 
+        self.root.iconbitmap(r"../img/favicon.ico") # Converte .png etc para .ico / salvar como favicon.ico na pasta img 
         
         estilo_titulo = ("Arial", 14, "bold")
         estilo_normal = ("Arial", 14)
