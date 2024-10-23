@@ -12,14 +12,17 @@ nltk.download('wordnet')
 
 class IDFApp:
     def __init__(self, root):
-        
         self.root = root
         customtkinter.set_appearance_mode("dark")
         customtkinter.set_default_color_theme("green")
+        customtkinter.set_window_scaling(0.9) 
+        customtkinter.set_widget_scaling(0.9)
+        self.root.resizable(width=False, height=False)
         self.root.title("Recomendações de Música (Similiaridade dos Cossenos)")
         self.root.geometry("700x900")
+        #customtkinter.deactivate_automatic_dpi_awareness()
         self.root.configure(bg="#f0f0f0")
-        self.root.iconbitmap(r"../img/favicon.ico") # Converte .png etc para .ico / salvar como favicon.ico na pasta img 
+        #self.root.iconbitmap(r"../img/favicon.ico") # Converte .png etc para .ico / salvar como favicon.ico na pasta img 
         
         estilo_titulo = ("Arial", 14, "bold")
         estilo_normal = ("Arial", 14)
@@ -30,7 +33,7 @@ class IDFApp:
             self.root.grid_columnconfigure(i, weight=1)
        
         self.label = customtkinter.CTkLabel(root, text="Escoha o Arquivo CSV:", font=estilo_titulo)
-        self.label.grid(row=0, column=0, columnspan=2, pady=10, padx=20, sticky='nsew')
+        self.label.grid(row=0, column=0, columnspan=2, pady=10, padx=20, sticky='w')
         
         self.btn_upload = customtkinter.CTkButton(root, text="Escolher", font=estilo_normal, command=self.upload_file_text)
         self.btn_upload.grid(row=1, column=0, columnspan=2, pady=10, padx=150, sticky="nsew") 
@@ -56,7 +59,7 @@ class IDFApp:
         self.txt_resultado = tk.Text(root, height=8, width=60, font=estilo_normal, bd=2, relief='solid', state="disabled")
         self.txt_resultado.grid(row=8, column=0, columnspan=2, pady=10, padx=20, sticky="nsew")
         
-        self.txt_elementos_analisados = customtkinter.CTkLabel(root, text=f"De xxx \nelementos analisados", font=estilo_titulo, text_color="green")
+        self.txt_elementos_analisados = customtkinter.CTkLabel(root, text=f"De xxx \nelementos analisados", font=estilo_titulo, text_color="lightgreen")
         self.txt_elementos_analisados.grid(row=8, column=2, columnspan=2, pady=10, padx=20, sticky='nsew')
 
         self.todas_colunas = []  # Armazena todas as colunas do arquivo CSV
@@ -120,7 +123,8 @@ class IDFApp:
             
             for i in ordens:
                 porcentagem_similaridade = similaridades[0][i] * 100
-                
+                grau_similiaridade = porcentagem_similaridade / 100
+
                 if porcentagem_similaridade > 0 and ordens.size != 0:
                     info =  self.data[colunas_selecionadas].iloc[i].to_string().replace(r"\n", " ")
                     nome_musica = self.data['Title'].iloc[i]
@@ -129,7 +133,8 @@ class IDFApp:
                     self.txt_resultado.configure(state='normal')
                     self.txt_resultado.insert(tk.END, f"{i+1}) {nome_musica} - {nome_artista}:\n")
                     self.txt_resultado.insert(tk.END, f" {info}\n")
-                    self.txt_resultado.insert(tk.END, f" Similiaridade: {porcentagem_similaridade:.2f}%\n\n")
+                    self.txt_resultado.insert(tk.END, f" Similiaridade: {porcentagem_similaridade:.2f}%\n")
+                    self.txt_resultado.insert(tk.END, f" Similiaridade: {grau_similiaridade:.4f}º\n\n")
                 else:
                     self.txt_resultado.delete(1.0, tk.END) 
                     self.txt_resultado.insert(tk.END, f"Top 5 Elementos Mais Semelhantes à amostra (%): ({nome})\n\n")
