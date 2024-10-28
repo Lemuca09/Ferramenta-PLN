@@ -22,7 +22,10 @@ class IDFApp:
         self.root.geometry("800x900")
         customtkinter.deactivate_automatic_dpi_awareness()
         self.root.configure(bg="#f0f0f0")
-        self.root.iconbitmap(r"../GitRepositorio-main/img/favicon.ico") # Converte .png etc para .ico / salvar como favicon.ico na pasta img 
+        try:
+            self.root.iconbitmap(r"../GitRepositorio-main/img/favicon.ico") # Converte .png etc para .ico / salvar como favicon.ico na pasta img 
+        except:
+            self.root.iconbitmap(r"../img/favicon.ico")
         
         estilo_titulo = ("Arial", 14, "bold")
         estilo_normal = ("Arial", 14)
@@ -31,12 +34,6 @@ class IDFApp:
             self.root.grid_rowconfigure(i, weight=1)
         for i in range(2):
             self.root.grid_columnconfigure(i, weight=1)
-       
-        #self.label = customtkinter.CTkLabel(root, text="Escoha o Arquivo CSV:", font=estilo_titulo)
-        #self.label.grid(row=0, column=0, columnspan=2, pady=10, padx=20, sticky='w')
-        
-        #self.btn_upload = customtkinter.CTkButton(root, text="Escolher", font=estilo_normal, command=self.upload_file_text, state=tk)
-        #self.btn_upload.grid(row=1, column=0, columnspan=2, pady=10, padx=150, sticky="nsew") 
         
         self.lbl_colunas = customtkinter.CTkLabel(root, text="Selecione a Coluna:", font=estilo_titulo)
         self.lbl_colunas.grid(row=0, column=0, pady=10, padx=20, sticky='w')
@@ -69,14 +66,20 @@ class IDFApp:
     def load_csv_file(self):
         try:
             # Tenta abrir o arquivo como UTF-8
-            self.data = pd.read_csv(r"../GitRepositorio-main/DataFrame/Songs.csv", encoding='utf-8') 
+            try:
+                self.data = pd.read_csv(r"../GitRepositorio-main/DataFrame/Songs.csv", encoding='utf-8') 
+            except:
+                self.data = pd.read_csv(r"../DataFrame/Songs.csv", encoding='utf-8')
             self.gera_colunas_listbox()
 
         except UnicodeDecodeError: 
             # Corrige o erro se o arquivo não estiver em utf-8
             try:
                 # Tenta abrir com ISO-8859-1
-                self.data = pd.read_csv(r"../GitRepositorio-main/DataFrame/Songs.csv", encoding='ISO-8859-1')  
+                try:
+                    self.data = pd.read_csv(r"../GitRepositorio-main/DataFrame/Songs.csv", encoding='ISO-8859-1') 
+                except:
+                    self.data = pd.read_csv(r"../DataFrame/Songs.csv", encoding='ISO-8859-1')
                 self.gera_colunas_listbox()
 
             except Exception as e:
@@ -96,7 +99,6 @@ class IDFApp:
             return
         try:
             N = len(self.data)
-
             amostra = self.txt_amostra.get("1.0", tk.END).strip().lower()
             if not amostra:
                 messagebox.showerror("[Erro!]", "Insira a Amostra")
@@ -106,11 +108,8 @@ class IDFApp:
             self.txt_resultado.delete(1.0, tk.END) 
 
             vectorizer = TfidfVectorizer(use_idf=True, stop_words="english")
-            
             stop_words = vectorizer.get_stop_words()
-     
             amostra = ' '.join(palavra for palavra in amostra.split() if palavra.lower() not in stop_words)
-        
             tfidf_matriz = vectorizer.fit_transform(self.data[colunas_selecionadas].fillna('').astype(str).apply(lambda x: ' '.join(palavra for palavra in ' '.join(x).split() if palavra.lower() not in stop_words), axis=1).tolist() + [amostra])
             
             nm_coluna = colunas_selecionadas.copy()
@@ -144,7 +143,6 @@ class IDFApp:
                     self.txt_resultado.insert(tk.END, f"0 Resultados Encontrados! Sem Possíveis Recomendações.\n\n")
 
             self.txt_elementos_analisados.configure(text=f"De {N} \nelementos analisados")
-            
             self.txt_resultado.configure(state='disabled')
 
             messagebox.showinfo("Sucesso", "Similiaridade dos Cossenos Calculada com Sucesso!")
@@ -152,7 +150,6 @@ class IDFApp:
         except Exception as e:
             messagebox.showerror("[Erro!]", f"Erro ao Calcular a Similiaridade dos Cossenos: {e}")
 #endregion
-
 if __name__ == "__main__":
     root = customtkinter.CTk()
     app = IDFApp(root)
