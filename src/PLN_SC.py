@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import messagebox
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
